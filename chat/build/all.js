@@ -170,7 +170,8 @@ module.exports = SonicCoder;
 var RingBuffer = require('./ring-buffer.js');
 var SonicCoder = require('./sonic-coder.js');
 
-var audioContext = new window.AudioContext || new webkitAudioContext();
+var AudioContext = window.AudioContext || webkitAudioContext;
+var audioContext = window.audioContext || new AudioContext();
 /**
  * Extracts meaning from audio streams.
  *
@@ -215,8 +216,12 @@ SonicServer.prototype.start = function() {
   var constraints = {
     audio: { optional: [{ echoCancellation: false }] }
   };
-  navigator.webkitGetUserMedia(constraints,
-      this.onStream_.bind(this), this.onStreamError_.bind(this));
+  navigator.getMedia = ( navigator.getUserMedia ||
+                         navigator.webkitGetUserMedia ||
+                         navigator.mozGetUserMedia ||
+                         navigator.msGetUserMedia );
+  navigator.getMedia({audio: true}, this.onStream_.bind(this),
+    this.onStreamError_.bind(this));
 };
 
 /**
@@ -470,7 +475,8 @@ module.exports = SonicServer;
 },{"./ring-buffer.js":2,"./sonic-coder.js":3}],5:[function(require,module,exports){
 var SonicCoder = require('./sonic-coder.js');
 
-var audioContext = new window.AudioContext || new webkitAudioContext();
+var AudioContext = window.AudioContext || webkitAudioContext;
+var audioContext = window.audioContext || new AudioContext();
 
 /**
  * Encodes text as audio streams.
@@ -509,7 +515,8 @@ SonicSocket.prototype.send = function(input, opt_callback) {
 };
 
 SonicSocket.prototype.scheduleToneAt = function(freq, startTime, duration) {
-  var gainNode = audioContext.createGain();
+  var gainNode = audioContext.createGain && audioContext.createGain() ||
+                 audioContext.createGainNode && audioContext.createGainNode();
   // Gain => Merger
   gainNode.gain.value = 0;
 
